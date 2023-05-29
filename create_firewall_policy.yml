@@ -1,0 +1,51 @@
+---
+
+- name: gathering fortimanager facts
+  hosts: '*'
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - fortinet.fortimanager
+  vars:
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_port: 443
+    username: "{{ lookup('env', 'fortinet_username', errors='ignore') }}"
+    password: "{{ lookup('env', 'fortinet_password', errors='ignore') }}"
+#    ssh_token: "{{ lookup('ansible', 'fortinet_username', errors='ignore') }}"
+    rule_name: New Rule
+    source_interface: internal
+    destination_interface: external
+    source_address: 10.0.0.0/24
+    destination_address: 192.168.2.0/24
+    service: http
+    action: accept
+    status: enable
+
+  tasks:
+
+
+    - name: Configure IPv4 policies.
+      fmgr_pkg_firewall_policy:
+        bypass_validation: False
+        adom: root
+        pkg: default # package name
+        state: present
+        pkg_firewall_policy:
+           action: accept #<value in [deny, accept, ipsec, ...]>
+           comments: ansible-comment
+           dstaddr: all
+           dstintf: any
+           name: ansible-test-policy
+           nat: disable
+           policyid: 199
+           schedule: always
+           service: ALL
+           srcaddr: all
+           srcintf: any
+           status: disable
+      register: result
+
+    - name: Print Result
+      debug:
+        var: result
